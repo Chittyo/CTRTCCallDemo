@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <RadioGroup
+        android:id="@+id/rgUsers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/etRoomId"
+        android:orientation="horizontal"
+        >
+        <RadioButton
+            android:id="@+id/rbUser001"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="登录用户1"
+            android:background="@color/app_color_blue"
+            android:layout_marginEnd="10dp"
+            android:checked="true"
+            />
+        <RadioButton
+            android:id="@+id/rbUser002"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="登录用户2"
+            android:background="@color/app_color_blue"
+            android:layout_marginEnd="10dp"
+            />
+        <RadioButton
+            android:id="@+id/rbUser003"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="登录用户3"
+            android:background="@color/app_color_blue"
+            />
+
+    </RadioGroup>
+
+    <EditText
+        android:id="@+id/etRoomId"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/rgUsers"
+        app:layout_constraintBottom_toTopOf="@+id/btnGetToken"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:inputType="numberDecimal"
+        android:hint="请输入房间号"
+        />
+
+    <Button
+        android:id="@+id/btnGetToken"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="获取 token"
+        app:layout_constraintBottom_toTopOf="@+id/btnConnectIMServer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/etRoomId" />
+
+    <Button
+        android:id="@+id/btnConnectIMServer"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="音视频通话"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnGetToken"
+        app:layout_constraintBottom_toTopOf="@+id/btnRTCConnectIMServer"
+        />
+
+    <Button
+        android:id="@+id/btnRTCConnectIMServer"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="音视频会议"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnConnectIMServer"
+        app:layout_constraintBottom_toBottomOf="parent"
+        />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

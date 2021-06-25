@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">ChittyDemo</string>
+
+    <string name="accept">接听</string>
+    <string name="hang_up">挂断</string>
+    <string name="call">拨打</string>
+</resources>
