@@ -63,16 +63,16 @@
         android:layout_width="200dp"
         android:layout_height="60dp"
         android:text="获取 token"
-        app:layout_constraintBottom_toTopOf="@+id/btnConnectIMServer"
+        app:layout_constraintBottom_toTopOf="@+id/btnCallKitConnectIMServer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/etRoomId" />
 
     <Button
-        android:id="@+id/btnConnectIMServer"
+        android:id="@+id/btnCallKitConnectIMServer"
         android:layout_width="200dp"
         android:layout_height="60dp"
-        android:text="音视频通话"
+        android:text="音视频通话（CallKit）"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/btnGetToken"
@@ -86,8 +86,19 @@
         android:text="音视频会议"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnConnectIMServer"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnCallKitConnectIMServer"
+        app:layout_constraintBottom_toTopOf="@+id/btnCallLibConnectIMServer"
         />
+
+
+    <Button
+        android:id="@+id/btnCallLibConnectIMServer"
+        android:layout_width="200dp"
+        android:layout_height="60dp"
+        android:text="音视频通话（CallLib）"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnRTCConnectIMServer"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

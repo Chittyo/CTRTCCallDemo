@@ -19,7 +19,7 @@ import io.rong.imlib.model.Conversation;
 /**
  * 音视频通话
  */
-public class CallActivity extends AppCompatActivity implements View.OnClickListener{
+public class CallKitActivity extends AppCompatActivity implements View.OnClickListener{
 
     private Button btnMultiPersonCall, btnSinglePersonCall;
     public static final String USER_ID = "user_id";
@@ -27,7 +27,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     private String roomId = "1001", userId = "001";
 
     public static void start(Context context, String roomId, String userId) {
-        Intent intent = new Intent(context, CallActivity.class);
+        Intent intent = new Intent(context, CallKitActivity.class);
         intent.putExtra(ROOM_ID, roomId);
         intent.putExtra(USER_ID, userId);
         context.startActivity(intent);
@@ -36,7 +36,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_call);
+        setContentView(R.layout.activity_call_kit);
 
         btnSinglePersonCall = findViewById(R.id.btnSinglePersonCall);
         btnMultiPersonCall = findViewById(R.id.btnMultiPersonCall);
@@ -61,7 +61,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                        break;
                     }
                 }
-                RongCallKit.startSingleCall(CallActivity.this, targetId, RongCallKit.CallMediaType.CALL_MEDIA_TYPE_VIDEO);
+                RongCallKit.startSingleCall(CallKitActivity.this, targetId, RongCallKit.CallMediaType.CALL_MEDIA_TYPE_VIDEO);
 
                 break;
             case R.id.btnMultiPersonCall:
@@ -71,7 +71,7 @@ public class CallActivity extends AppCompatActivity implements View.OnClickListe
                 userIds.add("001");
                 userIds.add("002");
                 userIds.add("003");
-                RongCallKit.startMultiCall(CallActivity.this, Conversation.ConversationType.GROUP, roomId, mediaType, userIds);
+                RongCallKit.startMultiCall(CallKitActivity.this, Conversation.ConversationType.GROUP, roomId, mediaType, userIds);
                 break;
             default:
                 break;

@@ -1,0 +1,199 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/llUser"
+        android:layout_width="match_parent"
+        android:layout_height="240dp"
+        android:background="@color/black"
+        android:orientation="horizontal"
+        android:weightSum="2">
+
+        <FrameLayout
+            android:id="@+id/flLocal"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:layout_weight="1" />
+
+        <FrameLayout
+            android:id="@+id/flRemote"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_margin="10dp"
+            android:layout_weight="1" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/flFullscreen"
+        android:layout_width="match_parent"
+        android:layout_height="240dp" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/action_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@+id/llUser"
+        android:layout_centerHorizontal="true"
+        android:layout_gravity="center">
+
+        <RadioGroup
+            android:id="@+id/rgUsers"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent">
+
+            <RadioButton
+                android:id="@+id/rbSingle"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_marginEnd="10dp"
+                android:layout_weight="1"
+                android:background="@color/app_color_blue"
+                android:checked="true"
+                android:text="单人通话" />
+
+            <RadioButton
+                android:id="@+id/rbDouble"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@color/app_color_blue"
+                android:text="多人通话" />
+        </RadioGroup>
+
+        <EditText
+            android:id="@+id/etTargetUserId"
+            android:layout_width="300dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="10dp"
+            android:background="@color/white"
+            android:backgroundTint="@color/app_color_blue"
+            android:hint="请输入您要呼叫的用户ID"
+            android:inputType="number"
+            android:maxLength="11"
+            android:maxLines="1"
+            android:paddingStart="5dp"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rgUsers" />
+
+        <EditText
+            android:id="@+id/etTargetUserId2"
+            android:layout_width="300dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="5dp"
+            android:background="@color/white"
+            android:backgroundTint="@color/app_color_blue"
+            android:hint="请输入您要呼叫的用户ID"
+            android:inputType="number"
+            android:maxLength="11"
+            android:maxLines="1"
+            android:paddingStart="5dp"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etTargetUserId" />
+
+        <EditText
+            android:id="@+id/etTargetGroupId"
+            android:layout_width="220dp"
+            android:layout_height="40dp"
+            android:layout_marginTop="5dp"
+            android:background="@color/white"
+            android:backgroundTint="@color/app_color_blue"
+            android:hint="请输入您要呼叫的用户群组ID"
+            android:inputType="number"
+            android:maxLength="11"
+            android:maxLines="1"
+            android:paddingStart="5dp"
+            android:singleLine="true"
+            android:textColor="@color/black"
+            android:textColorHint="@color/black"
+            android:textSize="14sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etTargetUserId2" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/groupIds"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            app:constraint_referenced_ids="etTargetGroupId,etTargetUserId2"
+            tools:visibility="visible" />
+
+        <Button
+            android:id="@+id/btnCall"
+            android:layout_width="200dp"
+            android:layout_height="46dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_green"
+            android:gravity="center"
+            android:text="@string/call"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/etTargetGroupId" />
+
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            app:layout_constraintEnd_toEndOf="@+id/btnCall"
+            app:layout_constraintStart_toStartOf="@+id/btnCall"
+            app:layout_constraintTop_toBottomOf="@+id/btnCall"
+            tools:text="呼叫中" />
+
+        <Button
+            android:id="@+id/btnAccept"
+            android:layout_width="100dp"
+            android:layout_height="46dp"
+            android:layout_marginEnd="0dp"
+            android:background="@drawable/bg_green"
+            android:gravity="center"
+            android:text="@string/accept"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@+id/btnHangUp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/btnCall" />
+
+        <Button
+            android:id="@+id/btnHangUp"
+            android:layout_width="100dp"
+            android:layout_height="46dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_red"
+            android:gravity="center"
+            android:text="@string/hang_up"
+            android:textColor="@color/white"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/btnAccept"
+            app:layout_constraintTop_toBottomOf="@+id/btnCall" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</RelativeLayout>

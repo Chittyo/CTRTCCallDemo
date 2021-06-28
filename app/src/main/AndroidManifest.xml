@@ -34,7 +34,7 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".activity.CallActivity"
+            android:name=".activity.CallKitActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
@@ -47,6 +47,11 @@
             android:name=".activity.MeetingActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity
+            android:name=".activity.CallLibActivity"
+            android:screenOrientation="portrait"
+            android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
     </application>
 

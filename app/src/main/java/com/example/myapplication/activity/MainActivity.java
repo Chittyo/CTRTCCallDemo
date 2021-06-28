@@ -29,7 +29,7 @@ import io.rong.imlib.RongIMClient;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getName();
-    private Button btnGetToken, btnConnectIMServer, btnRTCConnectIMServer;
+    private Button btnGetToken, btnConnectIMServer, btnRTCConnectIMServer, btnConnectIMServerCallLib;
     private RadioGroup rgUsers;
     private EditText etRoomId;
     private String token001 = "Enzbxdr7hdO6WSr+DZFARkaUNlc6QSw8FXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com";
@@ -56,14 +56,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setContentView(R.layout.activity_main);
 
         btnGetToken = findViewById(R.id.btnGetToken);
-        btnConnectIMServer = findViewById(R.id.btnConnectIMServer);
+        btnConnectIMServer = findViewById(R.id.btnCallKitConnectIMServer);
         btnRTCConnectIMServer = findViewById(R.id.btnRTCConnectIMServer);
         rgUsers = findViewById(R.id.rgUsers);
         etRoomId = findViewById(R.id.etRoomId);
+        btnConnectIMServerCallLib = findViewById(R.id.btnCallLibConnectIMServer);
 
         btnGetToken.setOnClickListener(this);
         btnConnectIMServer.setOnClickListener(this);
         btnRTCConnectIMServer.setOnClickListener(this);
+        btnConnectIMServerCallLib.setOnClickListener(this);
 
         rgUsers.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -124,7 +126,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onGetTokenSuccess(String token) {
                 Log.e(TAG, "onGetTokenSuccess() token = " + token);
-                connectIMServer(token);
+                callKitConnectIMServer(token);
             }
 
             @Override
@@ -136,10 +138,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     /**
-     * 音视频通话
+     * 音视频通话(CallKit)
      * @param token
      */
-    private void connectIMServer(String token) {
+    private void callKitConnectIMServer(String token) {
         Log.e(TAG,"connectIMServer");
         // 关键步骤 2：使用从 App Server 获取的代表 UserID 身份的 Token 字符串，连接融云 IM 服务。
         RongIM.connect(token, new RongIMClient.ConnectCallback() {
@@ -153,8 +155,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
                     return;
                 }
-                CallActivity.start(MainActivity.this, roomId, userId);
-
+                CallKitActivity.start(MainActivity.this, roomId, userId);
+                finish();
             }
 
             @Override
@@ -187,16 +189,58 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     return;
                 }
                 MeetingPrepareActivity.start(MainActivity.this, roomId, userId);
+                finish();
             }
 
             @Override
             public void onError(RongIMClient.ConnectionErrorCode code) {
                 Log.e(TAG, "--> rtcConnectIMServer - onError - 连接融云 IM 服务失败，code = " + code);
+                if(code.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
+                    //从 APP 服务获取新 token，并重连
+                } else {
+                    //无法连接 IM 服务器，请根据相应的错误码作出对应处理
+                }
             }
 
             @Override
             public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus databaseOpenStatus) {
+                //消息数据库打开，可以进入到主页面
                 Log.e(TAG, "--> rtcConnectIMServer - onDatabaseOpened databaseOpenStatus = "+databaseOpenStatus);// DATABASE_OPEN_SUCCESS
+            }
+        });
+    }
+
+    private void callLibConnectIMServer(String token) {
+        RongIMClient.connect(token, new RongIMClient.ConnectCallback() {
+            @Override
+            public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus code) {
+                //消息数据库打开，可以进入到主页面
+                Log.e(TAG, "--> callLibConnectIMServer - onDatabaseOpened DatabaseOpenStatus = "+code);// DATABASE_OPEN_SUCCESS
+
+            }
+
+            @Override
+            public void onSuccess(String s) {
+                //连接成功
+                Log.e(TAG, "--> callLibConnectIMServer - onSuccess");
+
+                roomId = etRoomId.getText().toString().trim();
+                if (TextUtils.isEmpty(roomId)) {
+                    Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
+                    return;
+                }
+                CallLibActivity.start(MainActivity.this);
+                finish();
+            }
+
+            @Override
+            public void onError(RongIMClient.ConnectionErrorCode errorCode) {
+                Log.e(TAG, "--> callLibConnectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
+                if(errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
+                    //从 APP 服务获取新 token，并重连
+                } else {
+                    //无法连接 IM 服务器，请根据相应的错误码作出对应处理
+                }
             }
         });
     }
@@ -210,13 +254,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     getTokenFromAppServer();
                 }
                 break;
-            case R.id.btnConnectIMServer://音视频通话
+            case R.id.btnCallKitConnectIMServer://音视频通话(CallKit)
                 Log.e(TAG,"btnConnectIMServer 点击了");
-                connectIMServer(token);
+                callKitConnectIMServer(token);
                 break;
             case R.id.btnRTCConnectIMServer://音视频会议
                 Log.e(TAG,"btnRTCConnectIMServer 点击了");
                 rtcConnectIMServer(token);
+                break;
+            case R.id.btnCallLibConnectIMServer://音视频通话(CallLib)
+                Log.e(TAG,"btnConnectIMServerCallLib 点击了");
+                callLibConnectIMServer(token);
                 break;
         }
     }
