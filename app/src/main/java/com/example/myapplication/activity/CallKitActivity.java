@@ -3,10 +3,8 @@ package com.example.myapplication.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import androidx.annotation.Nullable;
@@ -27,7 +25,6 @@ public class CallKitActivity extends AppCompatActivity implements View.OnClickLi
     private static final String TAG = CallKitActivity.class.getName();
     private Button btnMultiPersonCall, btnSinglePersonCall;
     private RadioGroup rgUsers;
-    private RadioButton rbUser001, rbUser002, rbUser003;
     public static final String USER_ID = "user_id";
     public static final String ROOM_ID = "room_id";
     private String roomId = "1001", userId = "001", targetId = "002";
@@ -53,8 +50,6 @@ public class CallKitActivity extends AppCompatActivity implements View.OnClickLi
         Intent intent = getIntent();
         roomId = intent.getStringExtra(ROOM_ID);
         userId = intent.getStringExtra(USER_ID);
-        Log.e(TAG, "--> onCreate - roomId = "+roomId);
-        Log.e(TAG, "--> onCreate - userId = "+userId);
 
         rgUsers.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -82,7 +77,7 @@ public class CallKitActivity extends AppCompatActivity implements View.OnClickLi
                 RongCallKit.startSingleCall(CallKitActivity.this, targetId, RongCallKit.CallMediaType.CALL_MEDIA_TYPE_VIDEO);
                 break;
             case R.id.btnMultiPersonCall:
-                //发起多人通话，要现在融云控制台创建群组并加入用户
+                //发起多人通话，注意⚠️要现在融云控制台创建群组并加入用户才🉑️
                 RongCallKit.CallMediaType mediaType = RongCallKit.CallMediaType.CALL_MEDIA_TYPE_VIDEO;
                 ArrayList<String> userIds = new ArrayList<>();
                 userIds.add("001");

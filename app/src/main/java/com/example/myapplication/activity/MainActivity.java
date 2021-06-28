@@ -29,7 +29,7 @@ import io.rong.imlib.RongIMClient;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getName();
-    private Button btnGetToken, btnConnectIMServer, btnRTCConnectIMServer, btnConnectIMServerCallLib;
+    private Button btnConnectIMServer, btnRTCConnectIMServer, btnConnectIMServerCallLib;
     private RadioGroup rgUsers;
     private EditText etRoomId;
     private String token001 = "Enzbxdr7hdO6WSr+DZFARkaUNlc6QSw8FXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com";
@@ -44,14 +44,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        btnGetToken = findViewById(R.id.btnGetToken);
         btnConnectIMServer = findViewById(R.id.btnCallKitConnectIMServer);
         btnRTCConnectIMServer = findViewById(R.id.btnRTCConnectIMServer);
         rgUsers = findViewById(R.id.rgUsers);
         etRoomId = findViewById(R.id.etRoomId);
         btnConnectIMServerCallLib = findViewById(R.id.btnCallLibConnectIMServer);
 
-        btnGetToken.setOnClickListener(this);
         btnConnectIMServer.setOnClickListener(this);
         btnRTCConnectIMServer.setOnClickListener(this);
         btnConnectIMServerCallLib.setOnClickListener(this);
@@ -103,8 +101,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     // 根据用户所填 UserID，模拟开发者从 App Server 获取 Token。
     private void getTokenFromAppServer() {
-        Log.e(TAG,"getTokenFromAppServer");
-
         if (TextUtils.isEmpty(userId)) {
             Toast.makeText(this, "UserID 不能为空！", Toast.LENGTH_SHORT).show();
             return;
@@ -114,7 +110,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onGetTokenSuccess(String token) {
-                Log.e(TAG, "onGetTokenSuccess() token = " + token);
+                Log.d(TAG, "--> onGetTokenSuccess() token = " + token);
                 if (callType == CallType.CALLKIT){
                     callKitConnectIMServer(token);
                 }else if (callType == CallType.RTCLIB){
@@ -127,7 +123,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onGetTokenFailed(String code) {
                 UiUtils.hideWaitingDialog();
-                Log.e(TAG,"onGetTokenFailed() 获取 Token 失败，code = " + code);
+                Log.e(TAG,"--> onGetTokenFailed() 获取 Token 失败，code = " + code);
             }
         });
     }
@@ -137,12 +133,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
      * @param token
      */
     private void callKitConnectIMServer(String token) {
-        Log.e(TAG,"connectIMServer");
         // 关键步骤 2：使用从 App Server 获取的代表 UserID 身份的 Token 字符串，连接融云 IM 服务。
         RongIM.connect(token, new RongIMClient.ConnectCallback() {
             @Override
             public void onSuccess(String s) {
-                Log.e(TAG, "--> connectIMServer - onSuccess");
                 UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
@@ -154,7 +148,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onError(RongIMClient.ConnectionErrorCode errorCode) {
-                Log.e(TAG, "--> connectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
+                Log.e(TAG, "--> callKitConnectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
                 UiUtils.hideWaitingDialog();
                 if(errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
                     //从 APP 服务获取新 token，并重连
@@ -174,7 +168,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             @Override
             public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus databaseOpenStatus) {
-                Log.e(TAG, "--> connectIMServer - onDatabaseOpened databaseOpenStatus = "+databaseOpenStatus);
+                Log.d(TAG, "--> callKitConnectIMServer - onDatabaseOpened databaseOpenStatus = "+databaseOpenStatus);
             }
         });
     }
@@ -188,7 +182,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         RongIMClient.connect(token, new RongIMClient.ConnectCallback() {
             @Override
             public void onSuccess(String s) {
-                Log.e(TAG, "--> rtcConnectIMServer - onSuccess");
                 UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
@@ -221,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus databaseOpenStatus) {
                 //消息数据库打开，可以进入到主页面
-                Log.e(TAG, "--> rtcConnectIMServer - onDatabaseOpened databaseOpenStatus = "+databaseOpenStatus);// DATABASE_OPEN_SUCCESS
+                Log.d(TAG, "--> rtcConnectIMServer - onDatabaseOpened databaseOpenStatus = "+databaseOpenStatus);// DATABASE_OPEN_SUCCESS
             }
         });
     }
@@ -231,14 +224,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus code) {
                 //消息数据库打开，可以进入到主页面
-                Log.e(TAG, "--> callLibConnectIMServer - onDatabaseOpened DatabaseOpenStatus = "+code);// DATABASE_OPEN_SUCCESS
+                Log.d(TAG, "--> callLibConnectIMServer - onDatabaseOpened DatabaseOpenStatus = "+code);// DATABASE_OPEN_SUCCESS
 
             }
 
             @Override
             public void onSuccess(String s) {
                 //连接成功
-                Log.e(TAG, "--> callLibConnectIMServer - onSuccess");
                 UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
@@ -273,28 +265,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     public void onClick(View v) {
         switch (v.getId()){
-            case R.id.btnGetToken:
-                Log.e(TAG,"btnGetToken 点击了");
-                if (checkPermission()) {
-                    getTokenFromAppServer();
-                }
-                break;
             case R.id.btnCallKitConnectIMServer://音视频通话(CallKit)
-                Log.e(TAG,"btnCallKitConnectIMServer 点击了");
                 callType = CallType.CALLKIT;
                 if (checkPermission()) {
                     getTokenFromAppServer();
                 }
                 break;
             case R.id.btnRTCConnectIMServer://音视频会议
-                Log.e(TAG,"btnRTCConnectIMServer 点击了");
                 callType = CallType.RTCLIB;
                 if (checkPermission()) {
                     getTokenFromAppServer();
                 }
                 break;
             case R.id.btnCallLibConnectIMServer://音视频通话(CallLib)
-                Log.e(TAG,"btnCallLibConnectIMServer 点击了");
                 callType = CallType.CALLLIB;
                 if (checkPermission()) {
                     getTokenFromAppServer();

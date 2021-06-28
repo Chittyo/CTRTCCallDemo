@@ -22,13 +22,10 @@ import java.util.List;
 import cn.rongcloud.rtc.api.RCRTCEngine;
 import cn.rongcloud.rtc.api.RCRTCRemoteUser;
 import cn.rongcloud.rtc.api.RCRTCRoom;
-import cn.rongcloud.rtc.api.RCRTCRoomConfig;
-import cn.rongcloud.rtc.api.callback.IRCRTCResultDataCallback;
 import cn.rongcloud.rtc.api.stream.RCRTCInputStream;
 import cn.rongcloud.rtc.api.stream.RCRTCVideoInputStream;
 import cn.rongcloud.rtc.api.stream.RCRTCVideoView;
 import cn.rongcloud.rtc.base.RCRTCMediaType;
-import cn.rongcloud.rtc.base.RCRTCRoomType;
 import cn.rongcloud.rtc.base.RTCErrorCode;
 
 /**
@@ -38,12 +35,12 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
     private static final String TAG = MeetingActivity.class.getName();
     public static final String KEY_ROOM_NUMBER = "room_number";
     public static final String KEY_IS_ENCRYPTION = "KEY_IS_ENCRYPTION";
-    private static String mRoomId = "";
+    private static String roomId = "";
     private boolean isEncryption = false;
-    MeetingPresenter mMeetingPresenter;
+    MeetingPresenter meetingPresenter;
     // 本地预览远端用户，全屏显示 VideoView
-    private FrameLayout mFlLocalUser, mFlRemoteUser, mFlFull;
-    private TextView mTvHangUp;
+    private FrameLayout flLocalUser, flRemoteUser, flFullscreen;
+    private TextView tvHangUp;
 
 
     public static void start(Context context, String roomId, boolean isEncryption) {
@@ -57,48 +54,39 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_meeting);
-        mFlLocalUser = findViewById(R.id.local);
-        mFlRemoteUser = findViewById(R.id.remote);
-        mFlFull = findViewById(R.id.fl_fullscreen);
-        mTvHangUp = findViewById(R.id.hang_up);
-        mTvHangUp.setOnClickListener(this);
+        flLocalUser = findViewById(R.id.flLocalUser);
+        flRemoteUser = findViewById(R.id.flRemoteUser);
+        flFullscreen = findViewById(R.id.flFullscreen);
+        tvHangUp = findViewById(R.id.tvHangUp);
+        tvHangUp.setOnClickListener(this);
 
         Intent intent = getIntent();
-        mRoomId = intent.getStringExtra(KEY_ROOM_NUMBER);
+        roomId = intent.getStringExtra(KEY_ROOM_NUMBER);
         isEncryption = intent.getBooleanExtra(KEY_IS_ENCRYPTION, false);
-        mMeetingPresenter = new MeetingPresenter();
-        mMeetingPresenter.attachView(this);
-        mMeetingPresenter.config(this, isEncryption);
-        mMeetingPresenter.joinRoom(mRoomId);
+        meetingPresenter = new MeetingPresenter();
+        meetingPresenter.attachView(this);
+        meetingPresenter.config(this, isEncryption);
+        meetingPresenter.joinRoom(roomId);
 
-        initBackButton();
         initTitle();
+        initLocalVideoView();
     }
 
     private void initTitle() {
         ActionBar supportActionBar = getSupportActionBar();
         if (supportActionBar != null) {
-            supportActionBar.setTitle((isEncryption ? "加密会议" : "普通会议") + ":" + mRoomId);
-        }
-    }
-
-    private void initBackButton() {
-        // 显示返回按钮
-        ActionBar supportActionBar = getSupportActionBar();
-        if (supportActionBar != null) {
-            supportActionBar.setHomeButtonEnabled(true);
-            supportActionBar.setDisplayHomeAsUpEnabled(true);
+            supportActionBar.setTitle((isEncryption ? "加密会议" : "普通会议") + ":" + roomId);
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        mMeetingPresenter.leaveRoom();
-        mMeetingPresenter.detachView();
-        mFlFull.removeAllViews();
-        mFlLocalUser.removeAllViews();
-        mFlRemoteUser.removeAllViews();
+        meetingPresenter.leaveRoom();
+        meetingPresenter.detachView();
+        flFullscreen.removeAllViews();
+        flLocalUser.removeAllViews();
+        flRemoteUser.removeAllViews();
         RCRTCEngine.getInstance().unInit();
     }
 
@@ -114,14 +102,12 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
         RCRTCEngine.getInstance().getDefaultVideoStream().startCamera(null);
     }
 
-
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
-            case R.id.hang_up:
+        switch (v.getId()) {
+            case R.id.tvHangUp:
                 finish();
                 break;
-
         }
     }
 
@@ -134,29 +120,15 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
                 RCRTCVideoView rongRTCVideoView = new MeetVideoView(getApplicationContext()) {
                     public boolean onTouchEvent(MotionEvent event) {
                         super.onTouchEvent(event);
-                        switch (event.getAction()) {
-                            case MotionEvent.ACTION_DOWN:
-                                // 本低预览视频全屏切换
-                                if (this.getParent() == mFlLocalUser) {
-                                    mFlLocalUser.removeView(this);
-                                    mFlFull.addView(this);
-                                } else {
-                                    mFlFull.removeView(this);
-                                    mFlLocalUser.addView(this);
-                                }
-                                break;
-                            default:
-                                break;
-                        }
                         return true;
                     }
                 };
                 RCRTCEngine.getInstance().getDefaultVideoStream().setVideoView(rongRTCVideoView);
-                mFlLocalUser.addView(rongRTCVideoView);
+                flLocalUser.addView(rongRTCVideoView);
                 // 本地用户发布
-                mMeetingPresenter.publishDefaultAVStream();
+                meetingPresenter.publishDefaultAVStream();
                 // 主动订阅远端用户发布的资源
-                mMeetingPresenter.subscribeAVStream();
+                meetingPresenter.subscribeAVStream();
             }
         });
     }
@@ -187,12 +159,12 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
                         super.onTouchEvent(event);
                         // 远端用户视频全屏切换
                         if (event.getAction() == MotionEvent.ACTION_DOWN) {
-                            if (this.getParent() == mFlRemoteUser) {
-                                mFlRemoteUser.removeView(this);
-                                mFlFull.addView(this);
+                            if (this.getParent() == flRemoteUser) {
+                                flRemoteUser.removeView(this);
+                                flFullscreen.addView(this);
                             } else {
-                                mFlFull.removeView(this);
-                                mFlRemoteUser.addView(this);
+                                flFullscreen.removeView(this);
+                                flRemoteUser.addView(this);
                             }
                         }
                         return true;
@@ -202,7 +174,7 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
                     if (inputStream.getMediaType() == RCRTCMediaType.VIDEO) {
                         ((RCRTCVideoInputStream) inputStream).setVideoView(videoView);
                         // 将远端视图添加至布局
-                        MeetingActivity.this.mFlRemoteUser.addView(videoView);
+                        MeetingActivity.this.flRemoteUser.addView(videoView);
                         break;
                     }
                 }
@@ -230,19 +202,19 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                RCRTCVideoView rongRTCVideoView = mFlRemoteUser.findViewWithTag(MeetVideoView.class.getName());
+                RCRTCVideoView rongRTCVideoView = flRemoteUser.findViewWithTag(MeetVideoView.class.getName());
                 // 远端用户离开时, videoview 在 mFlRemoteUser上，删除挂载在 mFlRemoteUser 上的 videoview
                 if (null != rongRTCVideoView) {
-                    mFlRemoteUser.removeAllViews();
-                    rongRTCVideoView = mFlFull.findViewWithTag(MeetVideoView.class.getName());
+                    flRemoteUser.removeAllViews();
+                    rongRTCVideoView = flFullscreen.findViewWithTag(MeetVideoView.class.getName());
                     // 远端用户离开时，如果本地预览正处于全屏状态自动退出全屏
                     if (rongRTCVideoView != null) {
-                        mFlFull.removeAllViews();
-                        mFlLocalUser.addView(rongRTCVideoView);
+                        flFullscreen.removeAllViews();
+                        flLocalUser.addView(rongRTCVideoView);
                     }
                 } else {
                     // 远端用户离开时 , videoview 在 mFlFull 上，删除挂载在 mFlFull 上的 videoview
-                    mFlFull.removeAllViews();
+                    flFullscreen.removeAllViews();
                 }
             }
         });

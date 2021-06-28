@@ -40,6 +40,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
     private Button btnCall, btnAccept, btnHangUp;
     private TextView tvStatus;
     private RadioGroup rgUsers;
+    private Group groupIds;
 
     private static CallStatus currentStatus = CallStatus.Idle;
     private Conversation.ConversationType conversationType = Conversation.ConversationType.PRIVATE;
@@ -52,9 +53,9 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onReceivedCall(RongCallSession callSession) {
-            Log.e(TAG, "onReceivedCall");
+            Log.d(TAG, "--> onReceivedCall");
             currentStatus = CallStatus.BeCall;
-            changeUi();
+            changeStatus();
         }
 
         /**
@@ -98,9 +99,9 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onCallOutgoing(RongCallSession callSession, SurfaceView localVideo) {
-            Log.e(TAG, "onCallOutgoing");
+            Log.d(TAG, "--> onCallOutgoing");
             currentStatus = CallStatus.Calling;
-            changeUi();
+            changeStatus();
         }
 
         /**
@@ -112,9 +113,9 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onCallConnected(RongCallSession callSession, SurfaceView localVideo) {
-            Log.e(TAG, "onCallConnected");
+            Log.d(TAG, "--> onCallConnected");
             currentStatus = CallStatus.OnCall;
-            changeUi();
+            changeStatus();
             addLocalView(localVideo);
         }
 
@@ -127,9 +128,9 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onCallDisconnected(RongCallSession callSession, RongCallCommon.CallDisconnectedReason reason) {
-            Log.e(TAG, "onCallDisconnected reason = " + reason);
+            Log.d(TAG, "--> onCallDisconnected reason = " + reason);
             currentStatus = CallStatus.Idle;
-            changeUi();
+            changeStatus();
             clearViews();
         }
 
@@ -140,7 +141,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onRemoteUserRinging(String uid) {
-            Log.e(TAG, "onRemoteUserRinging uid = " + uid);
+            Log.d(TAG, "--> onRemoteUserRinging uid = " + uid);
 
         }
 
@@ -164,7 +165,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onRemoteUserJoined(String userId, RongCallCommon.CallMediaType mediaType, int userType, SurfaceView remoteVideo) {
-            Log.e(TAG, "onRemoteUserRinging uid = " + userId);
+            Log.d(TAG, "--> onRemoteUserRinging uid = " + userId);
             addRemoteView(remoteVideo);
         }
 
@@ -177,9 +178,9 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onRemoteUserLeft(String userId, RongCallCommon.CallDisconnectedReason reason) {
-            Log.e(TAG, "onRemoteUserLeft userId = " + userId);
+            Log.d(TAG, "--> onRemoteUserLeft userId = " + userId);
             currentStatus = CallStatus.Idle;
-            changeUi();
+            changeStatus();
             clearViews();
         }
 
@@ -190,68 +191,67 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
          */
         @Override
         public void onError(RongCallCommon.CallErrorCode code) {
-            Log.e(TAG, "onError code = " + code);
+            Log.d(TAG, "--> onError code = " + code);
             currentStatus = CallStatus.Idle;
-            changeUi();
+            changeStatus();
             clearViews();
         }
 
         @Override
         public void onRemoteUserInvited(String uid, RongCallCommon.CallMediaType type) {
-            Log.e(TAG, "onRemoteUserInvited uid = " + uid);
+            Log.d(TAG, "--> onRemoteUserInvited uid = " + uid);
         }
 
         @Override
         public void onMediaTypeChanged(String uid, RongCallCommon.CallMediaType type, SurfaceView video) {
-            Log.e(TAG, "onMediaTypeChanged uid = " + uid + ", type = " + type);
+            Log.d(TAG, "--> onMediaTypeChanged uid = " + uid + ", type = " + type);
         }
 
         @Override
         public void onRemoteCameraDisabled(String uid, boolean disabled) {
-            Log.e(TAG, "onRemoteCameraDisabled uid = " + uid + ", disabled = " + disabled);
+            Log.d(TAG, "--> onRemoteCameraDisabled uid = " + uid + ", disabled = " + disabled);
         }
 
         @Override
         public void onRemoteMicrophoneDisabled(String uid, boolean disabled) {
-            Log.e(TAG, "onRemoteMicrophoneDisabled uid = " + uid + ", disabled = " + disabled);
+            Log.d(TAG, "--> onRemoteMicrophoneDisabled uid = " + uid + ", disabled = " + disabled);
         }
 
         @Override
         public void onRemoteUserPublishVideoStream(String uid, String sid, String tag, SurfaceView surfaceView) {
-            Log.e(TAG, "onRemoteUserPublishVideoStream uid = " + uid + ", sid = " + sid + ", tag = " + tag);
+            Log.d(TAG, "--> onRemoteUserPublishVideoStream uid = " + uid + ", sid = " + sid + ", tag = " + tag);
         }
 
         @Override
         public void onRemoteUserUnpublishVideoStream(String uid, String sid, String tag) {
-            Log.e(TAG, "onRemoteUserUnpublishVideoStream uid = " + uid + ", sid = " + sid + ", tag = " + tag);
+            Log.d(TAG, "--> onRemoteUserUnpublishVideoStream uid = " + uid + ", sid = " + sid + ", tag = " + tag);
         }
 
         @Override
         public void onFirstRemoteVideoFrame(String uid, int height, int width) {
-            Log.e(TAG, "onFirstRemoteVideoFrame uid = " + uid + ", height = " + height + ", width = " + width);
+            Log.d(TAG, "--> onFirstRemoteVideoFrame uid = " + uid + ", height = " + height + ", width = " + width);
         }
 
         @Override
         public void onNetworkSendLost(int lossRate, int delay) {
-            Log.e(TAG, "onNetworkSendLost lossRate = " + lossRate + ", delay = " + delay);
+            Log.d(TAG, "--> onNetworkSendLost lossRate = " + lossRate + ", delay = " + delay);
         }
 
         @Override
         public void onNetworkReceiveLost(String uid, int lossRate) {
-            Log.e(TAG, "onNetworkReceiveLost uid = " + uid + ", lossRate = " + lossRate);
+            Log.d(TAG, "--> onNetworkReceiveLost uid = " + uid + ", lossRate = " + lossRate);
         }
 
         @Override
         public void onAudioLevelSend(String level) {
-            Log.e(TAG, "onAudioLevelSend level = " + level);
+            Log.d(TAG, "--> onAudioLevelSend level = " + level);
         }
 
         @Override
         public void onAudioLevelReceive(HashMap<String, String> levels) {
-            Log.e(TAG, "onAudioLevelReceive levels = " + levels);
+            Log.d(TAG, "--> onAudioLevelReceive levels = " + levels);
         }
     };
-    private Group groupIds;
 
     public static void start(Context context) {
         Intent intent = new Intent(context, CallLibActivity.class);
@@ -263,8 +263,8 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_call_lib);
 
-        initUi();
-        changeUi();
+        initView();
+        changeStatus();
         registerCallListener();
     }
 
@@ -286,7 +286,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         RongCallClient.getInstance().setVoIPCallListener(null);
     }
 
-    private void initUi() {
+    private void initView() {
         flLocal = findViewById(R.id.flLocal);
         flRemote = findViewById(R.id.flRemote);
 
@@ -322,7 +322,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         });
     }
 
-    private void changeUi() {
+    private void changeStatus() {
         if (CallStatus.Idle == currentStatus) {
             btnCall.setEnabled(true);
             tvStatus.setText("");
@@ -335,7 +335,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
             btnAccept.setEnabled(false);
         } else if (CallStatus.BeCall == currentStatus) {
             btnCall.setEnabled(false);
-            tvStatus.setText("有人找你");
+            tvStatus.setText("有人找~");
             btnHangUp.setEnabled(true);
             btnAccept.setEnabled(true);
         } else if (CallStatus.OnCall == currentStatus) {

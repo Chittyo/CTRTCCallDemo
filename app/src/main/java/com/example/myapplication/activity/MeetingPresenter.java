@@ -1,6 +1,7 @@
 package com.example.myapplication.activity;
 
 import android.content.Context;
+import android.util.Log;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,8 +24,9 @@ import cn.rongcloud.rtc.base.RCRTCStreamType;
 import cn.rongcloud.rtc.base.RTCErrorCode;
 
 public class MeetingPresenter {
-    MeetingCallback mMeetingCallback = null;
-    private RCRTCRoom mRtcRoom = null;
+    private static final String TAG = MeetingPresenter.class.getName();
+    MeetingCallback meetingCallback = null;
+    private RCRTCRoom rtcRoom = null;
 
     private IRCRTCRoomEventsListener roomEventsListener = new IRCRTCRoomEventsListener() {
         /**
@@ -119,19 +121,19 @@ public class MeetingPresenter {
     };
 
     protected MeetingCallback getView() {
-        if (mMeetingCallback == null) {
+        if (meetingCallback == null) {
             throw new IllegalStateException("view is not attached");
         } else {
-            return mMeetingCallback;
+            return meetingCallback;
         }
     }
 
     public void attachView(MeetingCallback callback) {
-        mMeetingCallback = callback;
+        meetingCallback = callback;
     }
 
     public void detachView() {
-        mMeetingCallback = null;
+        meetingCallback = null;
     }
 
     /**
@@ -139,11 +141,11 @@ public class MeetingPresenter {
      * 视频流需要用户设置用于显示载体的videoview
      */
     public void subscribeAVStream() {
-        if (mRtcRoom == null || mRtcRoom.getRemoteUsers() == null) {
+        if (rtcRoom == null || rtcRoom.getRemoteUsers() == null) {
             return;
         }
         final List<RCRTCInputStream> inputStreams = new ArrayList<>();
-        for (final RCRTCRemoteUser remoteUser : mRtcRoom.getRemoteUsers()) {
+        for (final RCRTCRemoteUser remoteUser : rtcRoom.getRemoteUsers()) {
             if (remoteUser.getStreams().size() == 0) {
                 continue;
             }
@@ -160,7 +162,7 @@ public class MeetingPresenter {
         if (inputStreams.size() == 0) {
             return;
         }
-        mRtcRoom.getLocalUser().subscribeStreams(inputStreams, new IRCRTCResultCallback() {
+        rtcRoom.getLocalUser().subscribeStreams(inputStreams, new IRCRTCResultCallback() {
             @Override
             public void onSuccess() {
                 try {
@@ -185,11 +187,11 @@ public class MeetingPresenter {
      * 发布默认流
      */
     public void publishDefaultAVStream() {
-        if (mRtcRoom == null) {
+        if (rtcRoom == null) {
             return;
         }
         RCRTCEngine.getInstance().getDefaultVideoStream().startCamera(null);
-        mRtcRoom.getLocalUser().publishDefaultStreams(new IRCRTCResultCallback() {
+        rtcRoom.getLocalUser().publishDefaultStreams(new IRCRTCResultCallback() {
             @Override
             public void onSuccess() {
                 try {
@@ -209,7 +211,6 @@ public class MeetingPresenter {
             }
         });
     }
-
 
     /**
      * 配置rtc sdk
@@ -259,7 +260,7 @@ public class MeetingPresenter {
             @Override
             public void onSuccess(final RCRTCRoom rcrtcRoom) {
                 // 远端用户，本地用户相关资源的获取都依赖RtcRoom
-                MeetingPresenter.this.mRtcRoom = rcrtcRoom;
+                MeetingPresenter.this.rtcRoom = rcrtcRoom;
                 // 注册房间回调
                 rcrtcRoom.registerRoomListener(roomEventsListener);
                 try {
@@ -284,10 +285,12 @@ public class MeetingPresenter {
         RCRTCEngine.getInstance().leaveRoom(new IRCRTCResultCallback() {
             @Override
             public void onFailed(RTCErrorCode rtcErrorCode) {
+                Log.d(TAG, "leaveRoom - onFailed");
             }
 
             @Override
             public void onSuccess() {
+                Log.d(TAG, "leaveRoom - onSuccess");
             }
         });
     }
