@@ -37,19 +37,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private String token003 = "nXbwPYS2HrC6WSr+DZFARjhhokdvXIDdFXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com";
     private String userId = "001", token = token001;
     private String roomId = "1001";
+    private CallType callType = CallType.CALLKIT;
 
-    /*
-
-    Xiaomi Redmi Note 7 Pro 手机：userId = 001
-    HUAWEI HUAWEI NXT-DL00 手机：userId = 002
-    Xiaomi M2006C3LC 手机：userId = 003
-
-    {"code":200,"userId":"001","token":"Enzbxdr7hdO6WSr+DZFARkaUNlc6QSw8FXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com"}
-
-    {"code":200,"userId":"002","token":"DmWWu3/S6666WSr+DZFARi8Xh3c+CQbNFXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com"}
-
-     {"code":200,"userId":"003","token":"nXbwPYS2HrC6WSr+DZFARjhhokdvXIDdFXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com"}
-     */
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -73,15 +62,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 switch (checkedId){
                     case R.id.rbUser001:
                         userId = "001";
-                        token = token001;
+                        token = token001;//测试暂写死token
                         break;
                     case R.id.rbUser002:
                         userId = "002";
-                        token = token002;
+                        token = token002;//测试暂写死token
                         break;
                     case R.id.rbUser003:
                         userId = "003";
-                        token = token003;
+                        token = token003;//测试暂写死token
                         break;
                 }
             }
@@ -112,7 +101,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return true;
     }
 
-    // 根据用户所填 UserID，模拟从开发者 App Server 获取 Token。
+    // 根据用户所填 UserID，模拟开发者从 App Server 获取 Token。
     private void getTokenFromAppServer() {
         Log.e(TAG,"getTokenFromAppServer");
 
@@ -126,7 +115,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onGetTokenSuccess(String token) {
                 Log.e(TAG, "onGetTokenSuccess() token = " + token);
-                callKitConnectIMServer(token);
+                if (callType == CallType.CALLKIT){
+                    callKitConnectIMServer(token);
+                }else if (callType == CallType.RTCLIB){
+                    rtcConnectIMServer(token);
+                }else {
+                    callLibConnectIMServer(token);
+                }
             }
 
             @Override
@@ -148,22 +143,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onSuccess(String s) {
                 Log.e(TAG, "--> connectIMServer - onSuccess");
-//                UiUtils.hideWaitingDialog();
-
+                UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
                     Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 CallKitActivity.start(MainActivity.this, roomId, userId);
-                finish();
             }
 
             @Override
-            public void onError(RongIMClient.ConnectionErrorCode code) {
-                Log.e(TAG, "--> connectIMServer - onError - 连接融云 IM 服务失败，code = " + code);
-//                UiUtils.hideWaitingDialog();
-            }                                       
+            public void onError(RongIMClient.ConnectionErrorCode errorCode) {
+                Log.e(TAG, "--> connectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
+                UiUtils.hideWaitingDialog();
+                if(errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
+                    //从 APP 服务获取新 token，并重连
+                    getTokenFromAppServer();
+                }else if (errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONNECTION_EXIST)){
+                    //连接已存在
+                    roomId = etRoomId.getText().toString().trim();
+                    if (TextUtils.isEmpty(roomId)) {
+                        Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    CallKitActivity.start(MainActivity.this, roomId, userId);
+                } else {
+                    //无法连接 IM 服务器，请根据相应的错误码作出对应处理
+                }
+            }
 
             @Override
             public void onDatabaseOpened(RongIMClient.DatabaseOpenStatus databaseOpenStatus) {
@@ -182,21 +189,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             @Override
             public void onSuccess(String s) {
                 Log.e(TAG, "--> rtcConnectIMServer - onSuccess");
-
+                UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
                     Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 MeetingPrepareActivity.start(MainActivity.this, roomId, userId);
-                finish();
             }
 
             @Override
-            public void onError(RongIMClient.ConnectionErrorCode code) {
-                Log.e(TAG, "--> rtcConnectIMServer - onError - 连接融云 IM 服务失败，code = " + code);
-                if(code.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
+            public void onError(RongIMClient.ConnectionErrorCode errorCode) {
+                Log.e(TAG, "--> rtcConnectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
+                UiUtils.hideWaitingDialog();
+                if(errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
                     //从 APP 服务获取新 token，并重连
+                    getTokenFromAppServer();
+                }else if (errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONNECTION_EXIST)){
+                    //连接已存在
+                    roomId = etRoomId.getText().toString().trim();
+                    if (TextUtils.isEmpty(roomId)) {
+                        Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    MeetingPrepareActivity.start(MainActivity.this, roomId, userId);
                 } else {
                     //无法连接 IM 服务器，请根据相应的错误码作出对应处理
                 }
@@ -223,21 +239,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             public void onSuccess(String s) {
                 //连接成功
                 Log.e(TAG, "--> callLibConnectIMServer - onSuccess");
-
+                UiUtils.hideWaitingDialog();
                 roomId = etRoomId.getText().toString().trim();
                 if (TextUtils.isEmpty(roomId)) {
                     Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
                     return;
                 }
                 CallLibActivity.start(MainActivity.this);
-                finish();
             }
 
             @Override
             public void onError(RongIMClient.ConnectionErrorCode errorCode) {
                 Log.e(TAG, "--> callLibConnectIMServer - onError - 连接融云 IM 服务失败，code = " + errorCode);
+                UiUtils.hideWaitingDialog();
                 if(errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONN_TOKEN_INCORRECT)) {
                     //从 APP 服务获取新 token，并重连
+                    getTokenFromAppServer();
+                }else if (errorCode.equals(RongIMClient.ConnectionErrorCode.RC_CONNECTION_EXIST)){
+                    //连接已存在
+                    roomId = etRoomId.getText().toString().trim();
+                    if (TextUtils.isEmpty(roomId)) {
+                        Toast.makeText(MainActivity.this, "房间号不能为空！", Toast.LENGTH_SHORT).show();
+                        return;
+                    }
+                    CallLibActivity.start(MainActivity.this);
                 } else {
                     //无法连接 IM 服务器，请根据相应的错误码作出对应处理
                 }
@@ -255,17 +280,32 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
                 break;
             case R.id.btnCallKitConnectIMServer://音视频通话(CallKit)
-                Log.e(TAG,"btnConnectIMServer 点击了");
-                callKitConnectIMServer(token);
+                Log.e(TAG,"btnCallKitConnectIMServer 点击了");
+                callType = CallType.CALLKIT;
+                if (checkPermission()) {
+                    getTokenFromAppServer();
+                }
                 break;
             case R.id.btnRTCConnectIMServer://音视频会议
                 Log.e(TAG,"btnRTCConnectIMServer 点击了");
-                rtcConnectIMServer(token);
+                callType = CallType.RTCLIB;
+                if (checkPermission()) {
+                    getTokenFromAppServer();
+                }
                 break;
             case R.id.btnCallLibConnectIMServer://音视频通话(CallLib)
-                Log.e(TAG,"btnConnectIMServerCallLib 点击了");
-                callLibConnectIMServer(token);
+                Log.e(TAG,"btnCallLibConnectIMServer 点击了");
+                callType = CallType.CALLLIB;
+                if (checkPermission()) {
+                    getTokenFromAppServer();
+                }
                 break;
         }
+    }
+
+    enum CallType {
+        CALLKIT,
+        RTCLIB,
+        CALLLIB
     }
 }
