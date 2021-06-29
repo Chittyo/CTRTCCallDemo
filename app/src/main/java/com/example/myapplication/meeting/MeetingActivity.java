@@ -80,8 +80,6 @@ public class MeetingActivity extends BaseActivity<MeetingContract.View, MeetingC
         meetingPresenter.attachView(this);
         meetingPresenter.config(this, isEncryption);
         meetingPresenter.joinRoom(roomId);
-
-        initLocalVideoView();
     }
 
     @Override
@@ -93,18 +91,6 @@ public class MeetingActivity extends BaseActivity<MeetingContract.View, MeetingC
         flLocalUser.removeAllViews();
         flRemoteUser.removeAllViews();
         RCRTCEngine.getInstance().unInit();
-    }
-
-    /**
-     * 初始化本地视频
-     */
-    private void initLocalVideoView() {
-        // 初始化视图
-        RCRTCVideoView localVideoView = new RCRTCVideoView(getApplicationContext());
-        // 绑定视图
-        RCRTCEngine.getInstance().getDefaultVideoStream().setVideoView(localVideoView);
-        // 打开摄像机
-        RCRTCEngine.getInstance().getDefaultVideoStream().startCamera(null);
     }
 
     @Override
