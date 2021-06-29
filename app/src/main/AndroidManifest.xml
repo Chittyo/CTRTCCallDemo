@@ -39,12 +39,12 @@
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
-            android:name=".activity.MeetingPrepareActivity"
+            android:name=".meeting.MeetingPrepareActivity"
             android:screenOrientation="portrait"
             android:launchMode="singleTask"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity
-            android:name=".activity.MeetingActivity"
+            android:name=".meeting.MeetingActivity"
             android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />

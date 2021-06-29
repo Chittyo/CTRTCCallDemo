@@ -1,8 +1,8 @@
-package com.example.myapplication.activity;
+package com.example.myapplication.meeting;
 
 import android.content.Context;
 import android.content.Intent;
-import android.os.Bundle;
+import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -11,11 +11,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.ActionBar;
-import androidx.appcompat.app.AppCompatActivity;
-
 import com.example.myapplication.R;
+import com.example.myapplication.base.BaseActivity;
 
 import java.util.List;
 
@@ -31,7 +28,8 @@ import cn.rongcloud.rtc.base.RTCErrorCode;
 /**
  * 音视频会议
  */
-public class MeetingActivity extends AppCompatActivity implements View.OnClickListener, MeetingPresenter.MeetingCallback {
+public class MeetingActivity extends BaseActivity<MeetingContract.View, MeetingContract.Presenter> implements View.OnClickListener, MeetingContract.View {
+
     private static final String TAG = MeetingActivity.class.getName();
     public static final String KEY_ROOM_NUMBER = "room_number";
     public static final String KEY_IS_ENCRYPTION = "KEY_IS_ENCRYPTION";
@@ -42,6 +40,15 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
     private FrameLayout flLocalUser, flRemoteUser, flFullscreen;
     private TextView tvHangUp;
 
+    @Override
+    public MeetingContract.Presenter createPresenter() {
+        return new MeetingPresenter(MeetingActivity.this);
+    }
+
+    @Override
+    public MeetingContract.View createView() {
+        return this;
+    }
 
     public static void start(Context context, String roomId, boolean isEncryption) {
         Intent intent = new Intent(context, MeetingActivity.class);
@@ -51,32 +58,30 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
     }
 
     @Override
-    protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_meeting);
+    public int getLayoutId() {
+        return R.layout.activity_meeting;
+    }
+
+    @Override
+    public void initView() {
         flLocalUser = findViewById(R.id.flLocalUser);
         flRemoteUser = findViewById(R.id.flRemoteUser);
         flFullscreen = findViewById(R.id.flFullscreen);
         tvHangUp = findViewById(R.id.tvHangUp);
         tvHangUp.setOnClickListener(this);
+    }
 
+    @Override
+    public void initData() {
         Intent intent = getIntent();
         roomId = intent.getStringExtra(KEY_ROOM_NUMBER);
         isEncryption = intent.getBooleanExtra(KEY_IS_ENCRYPTION, false);
-        meetingPresenter = new MeetingPresenter();
+        meetingPresenter = new MeetingPresenter(MeetingActivity.this);
         meetingPresenter.attachView(this);
         meetingPresenter.config(this, isEncryption);
         meetingPresenter.joinRoom(roomId);
 
-        initTitle();
         initLocalVideoView();
-    }
-
-    private void initTitle() {
-        ActionBar supportActionBar = getSupportActionBar();
-        if (supportActionBar != null) {
-            supportActionBar.setTitle((isEncryption ? "加密会议" : "普通会议") + ":" + roomId);
-        }
     }
 
     @Override
@@ -135,17 +140,18 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
 
     @Override
     public void onJoinRoomFailed(RTCErrorCode rtcErrorCode) {
+        Log.e(TAG,"--> onJoinRoomFailed");
 
     }
 
     @Override
     public void onPublishSuccess() {
-
+        Log.d(TAG,"--> onPublishSuccess");
     }
 
     @Override
     public void onPublishFailed() {
-
+        Log.d(TAG,"--> onPublishFailed");
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.example.myapplication.activity;
+package com.example.myapplication.meeting;
 
 import android.content.Context;
 import android.content.Intent;

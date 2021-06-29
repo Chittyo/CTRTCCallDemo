@@ -1,4 +1,4 @@
-package com.example.myapplication.activity;
+package com.example.myapplication.meeting;
 
 import android.content.Context;
 import android.util.Log;
@@ -23,9 +23,18 @@ import cn.rongcloud.rtc.base.RCRTCRoomType;
 import cn.rongcloud.rtc.base.RCRTCStreamType;
 import cn.rongcloud.rtc.base.RTCErrorCode;
 
-public class MeetingPresenter {
+public class MeetingPresenter extends MeetingContract.Presenter{
     private static final String TAG = MeetingPresenter.class.getName();
-    MeetingCallback meetingCallback = null;
+
+    private Context context;
+
+    public MeetingPresenter() {
+    }
+
+    public MeetingPresenter(Context context) {
+        this.context = context;
+    }
+
     private RCRTCRoom rtcRoom = null;
 
     private IRCRTCRoomEventsListener roomEventsListener = new IRCRTCRoomEventsListener() {
@@ -120,26 +129,111 @@ public class MeetingPresenter {
         }
     };
 
-    protected MeetingCallback getView() {
-        if (meetingCallback == null) {
-            throw new IllegalStateException("view is not attached");
-        } else {
-            return meetingCallback;
+    /**
+     * 配置rtc sdk
+     */
+    public void config(Context context, boolean isEncryption) {
+
+        RCRTCConfig.Builder configBuilder = RCRTCConfig.Builder.create();
+        // 是否硬解码
+        configBuilder.enableHardwareDecoder(true);
+        // 是否硬编码
+        configBuilder.enableHardwareEncoder(true);
+        // 是否使用自定义加密
+        configBuilder.enableAudioEncryption(isEncryption);
+        configBuilder.enableVideoEncryption(isEncryption);
+
+        // init 需结合 uninit 使用，否则有些配置无法重新初始化
+        RCRTCEngine.getInstance().unInit();
+        RCRTCEngine.getInstance().init(context, configBuilder.build());
+
+        RCRTCVideoStreamConfig.Builder videoConfigBuilder = RCRTCVideoStreamConfig.Builder.create();
+        // 设置分辨率
+        videoConfigBuilder.setVideoResolution(RCRTCParamsType.RCRTCVideoResolution.RESOLUTION_720_1280);
+        // 设置帧率
+        videoConfigBuilder.setVideoFps(RCRTCParamsType.RCRTCVideoFps.Fps_30);
+        /**
+         * 设置最小码率，可根据分辨率RCRTCVideoResolution设置
+         * {@link RCRTCParamsType.RCRTCVideoResolution)}
+         */
+        videoConfigBuilder.setMinRate(250);
+        /**
+         * 设置最大码率，可根据分辨率RCRTCVideoResolution设置
+         * {@link RCRTCParamsType.RCRTCVideoResolution)}
+         */
+        videoConfigBuilder.setMaxRate(2200);
+        RCRTCEngine.getInstance().getDefaultVideoStream().setVideoConfig(videoConfigBuilder.build());
+
+        // 听筒播放
+        RCRTCEngine.getInstance().enableSpeaker(false);
+    }
+
+    @Override
+    public void joinRoom(String roomId) {
+        RCRTCRoomConfig roomConfig = RCRTCRoomConfig.Builder.create()
+                // 根据实际场景，选择音视频直播：LIVE_AUDIO_VIDEO 或音频直播：LIVE_AUDIO
+                .setRoomType(RCRTCRoomType.MEETING)
+                .build();
+        RCRTCEngine.getInstance().joinRoom(roomId, roomConfig, new IRCRTCResultDataCallback<RCRTCRoom>() {
+            @Override
+            public void onSuccess(final RCRTCRoom rcrtcRoom) {
+                // 远端用户，本地用户相关资源的获取都依赖RtcRoom
+                MeetingPresenter.this.rtcRoom = rcrtcRoom;
+                // 注册房间回调
+                rcrtcRoom.registerRoomListener(roomEventsListener);
+                try {
+                    getView().onJoinRoomSuccess(rcrtcRoom);
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailed(RTCErrorCode rtcErrorCode) {
+                try {
+                    getView().onJoinRoomFailed(rtcErrorCode);
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+    }
+
+    /**
+     * 发布默认流
+     */
+    @Override
+    public void publishDefaultAVStream() {
+        if (rtcRoom == null) {
+            return;
         }
-    }
+        RCRTCEngine.getInstance().getDefaultVideoStream().startCamera(null);
+        rtcRoom.getLocalUser().publishDefaultStreams(new IRCRTCResultCallback() {
+            @Override
+            public void onSuccess() {
+                try {
+                    getView().onPublishSuccess();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
+            }
 
-    public void attachView(MeetingCallback callback) {
-        meetingCallback = callback;
-    }
-
-    public void detachView() {
-        meetingCallback = null;
+            @Override
+            public void onFailed(RTCErrorCode rtcErrorCode) {
+                try {
+                    getView().onPublishFailed();
+                } catch (IllegalStateException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     /**
      * 主动订阅远端用户发布的流
      * 视频流需要用户设置用于显示载体的videoview
      */
+    @Override
     public void subscribeAVStream() {
         if (rtcRoom == null || rtcRoom.getRemoteUsers() == null) {
             return;
@@ -183,136 +277,18 @@ public class MeetingPresenter {
         });
     }
 
-    /**
-     * 发布默认流
-     */
-    public void publishDefaultAVStream() {
-        if (rtcRoom == null) {
-            return;
-        }
-        RCRTCEngine.getInstance().getDefaultVideoStream().startCamera(null);
-        rtcRoom.getLocalUser().publishDefaultStreams(new IRCRTCResultCallback() {
-            @Override
-            public void onSuccess() {
-                try {
-                    getView().onPublishSuccess();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailed(RTCErrorCode rtcErrorCode) {
-                try {
-                    getView().onPublishFailed();
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
-    /**
-     * 配置rtc sdk
-     */
-    public void config(Context context, boolean isEncryption) {
-
-        RCRTCConfig.Builder configBuilder = RCRTCConfig.Builder.create();
-        // 是否硬解码
-        configBuilder.enableHardwareDecoder(true);
-        // 是否硬编码
-        configBuilder.enableHardwareEncoder(true);
-        // 是否使用自定义加密
-        configBuilder.enableAudioEncryption(isEncryption);
-        configBuilder.enableVideoEncryption(isEncryption);
-
-        // init 需结合 uninit 使用，否则有些配置无法重新初始化
-        RCRTCEngine.getInstance().unInit();
-        RCRTCEngine.getInstance().init(context, configBuilder.build());
-
-        RCRTCVideoStreamConfig.Builder videoConfigBuilder = RCRTCVideoStreamConfig.Builder.create();
-        // 设置分辨率
-        videoConfigBuilder.setVideoResolution(RCRTCParamsType.RCRTCVideoResolution.RESOLUTION_720_1280);
-        // 设置帧率
-        videoConfigBuilder.setVideoFps(RCRTCParamsType.RCRTCVideoFps.Fps_30);
-        /**
-         * 设置最小码率，可根据分辨率RCRTCVideoResolution设置
-         * {@link RCRTCParamsType.RCRTCVideoResolution)}
-         */
-        videoConfigBuilder.setMinRate(250);
-        /**
-         * 设置最大码率，可根据分辨率RCRTCVideoResolution设置
-         * {@link RCRTCParamsType.RCRTCVideoResolution)}
-         */
-        videoConfigBuilder.setMaxRate(2200);
-        RCRTCEngine.getInstance().getDefaultVideoStream().setVideoConfig(videoConfigBuilder.build());
-
-        // 听筒播放
-        RCRTCEngine.getInstance().enableSpeaker(false);
-    }
-
-    public void joinRoom(String roomId) {
-        RCRTCRoomConfig roomConfig = RCRTCRoomConfig.Builder.create()
-                // 根据实际场景，选择音视频直播：LIVE_AUDIO_VIDEO 或音频直播：LIVE_AUDIO
-                .setRoomType(RCRTCRoomType.MEETING)
-                .build();
-        RCRTCEngine.getInstance().joinRoom(roomId, roomConfig, new IRCRTCResultDataCallback<RCRTCRoom>() {
-            @Override
-            public void onSuccess(final RCRTCRoom rcrtcRoom) {
-                // 远端用户，本地用户相关资源的获取都依赖RtcRoom
-                MeetingPresenter.this.rtcRoom = rcrtcRoom;
-                // 注册房间回调
-                rcrtcRoom.registerRoomListener(roomEventsListener);
-                try {
-                    getView().onJoinRoomSuccess(rcrtcRoom);
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailed(RTCErrorCode rtcErrorCode) {
-                try {
-                    getView().onJoinRoomFailed(rtcErrorCode);
-                } catch (IllegalStateException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
-    }
-
+    @Override
     public void leaveRoom() {
         RCRTCEngine.getInstance().leaveRoom(new IRCRTCResultCallback() {
             @Override
             public void onFailed(RTCErrorCode rtcErrorCode) {
-                Log.d(TAG, "leaveRoom - onFailed");
+                Log.d(TAG, "--> leaveRoom - onFailed");
             }
 
             @Override
             public void onSuccess() {
-                Log.d(TAG, "leaveRoom - onSuccess");
+                Log.d(TAG, "--> leaveRoom - onSuccess");
             }
         });
-    }
-
-    /**
-     * activity相关回调
-     */
-    public interface MeetingCallback {
-        void onJoinRoomSuccess(RCRTCRoom rcrtcRoom);
-
-        void onJoinRoomFailed(RTCErrorCode rtcErrorCode);
-
-        void onPublishSuccess();
-
-        void onPublishFailed();
-
-        void onSubscribeSuccess(List<RCRTCInputStream> inputStreamList);
-
-        void onSubscribeFailed();
-
-        void onUserJoined(RCRTCRemoteUser rcrtcRemoteUser);
-
-        void onUserLeft(RCRTCRemoteUser rcrtcRemoteUser);
     }
 }

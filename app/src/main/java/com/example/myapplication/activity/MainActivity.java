@@ -19,8 +19,10 @@ import androidx.core.content.ContextCompat;
 
 import com.example.myapplication.App;
 import com.example.myapplication.R;
+import com.example.myapplication.base.AppManager;
 import com.example.myapplication.common.MockAppServer;
 import com.example.myapplication.common.UiUtils;
+import com.example.myapplication.meeting.MeetingPrepareActivity;
 
 import java.util.ArrayList;
 
@@ -73,6 +75,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+        AppManager.getAppManager().addActivity(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        AppManager.getAppManager().removeActivity(this);
     }
 
     // 音视频功能所需权限检测
