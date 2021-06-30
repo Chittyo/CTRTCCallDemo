@@ -372,9 +372,8 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         }
     }
 
-    //单人通话、多人通话
     private void call() {
-        if (conversationType == Conversation.ConversationType.GROUP){
+        if (conversationType == Conversation.ConversationType.GROUP){//多人通话
             //群组ID
             String targetGroupId = etTargetGroupId.getText().toString().trim();
             //群组内的用户ID集合
@@ -390,7 +389,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
             RongCallCommon.CallMediaType mediaType = RongCallCommon.CallMediaType.VIDEO;
             String extra = "";
             RongCallClient.getInstance().startCall(conversationType, targetGroupId, userIds, null, mediaType, extra);
-        }else {
+        }else {//单人通话
             String targetId = etTargetUserId.getText().toString().trim();
             if (TextUtils.isEmpty(targetId)) {
                 Toast.makeText(this, "请输入被叫用户的 userid", Toast.LENGTH_LONG).show();
