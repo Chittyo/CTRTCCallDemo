@@ -1,7 +1,20 @@
-package com.example.myapplication.meeting;
+package com.example.myapplication.activity;
 
 import android.content.Context;
+import android.content.Intent;
+import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.FrameLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+
+import com.example.myapplication.R;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,23 +30,26 @@ import cn.rongcloud.rtc.api.callback.IRCRTCRoomEventsListener;
 import cn.rongcloud.rtc.api.stream.RCRTCInputStream;
 import cn.rongcloud.rtc.api.stream.RCRTCVideoInputStream;
 import cn.rongcloud.rtc.api.stream.RCRTCVideoStreamConfig;
+import cn.rongcloud.rtc.api.stream.RCRTCVideoView;
 import cn.rongcloud.rtc.base.RCRTCMediaType;
 import cn.rongcloud.rtc.base.RCRTCParamsType;
 import cn.rongcloud.rtc.base.RCRTCRoomType;
 import cn.rongcloud.rtc.base.RCRTCStreamType;
 import cn.rongcloud.rtc.base.RTCErrorCode;
 
-public class MeetingPresenter extends MeetingContract.Presenter{
-    private static final String TAG = MeetingPresenter.class.getName();
+/**
+ * 音视频会议
+ */
+public class MeetingActivity extends AppCompatActivity implements View.OnClickListener {
 
-    private Context context;
-
-    public MeetingPresenter() {
-    }
-
-    public MeetingPresenter(Context context) {
-        this.context = context;
-    }
+    private static final String TAG = MeetingActivity.class.getName();
+    public static final String KEY_ROOM_NUMBER = "room_number";
+    public static final String KEY_IS_ENCRYPTION = "KEY_IS_ENCRYPTION";
+    private static String roomId = "";
+    private boolean isEncryption = false;
+    // 本地预览远端用户，全屏显示 VideoView
+    private FrameLayout flLocalUser, flRemoteUser, flFullscreen;
+    private TextView tvHangUp;
 
     private RCRTCRoom rtcRoom = null;
 
@@ -87,7 +103,12 @@ public class MeetingPresenter extends MeetingContract.Presenter{
         @Override
         public void onUserJoined(final RCRTCRemoteUser rcrtcRemoteUser) {
             try {
-                getView().onUserJoined(rcrtcRemoteUser);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(MeetingActivity.this, ("用户:" + rcrtcRemoteUser.getUserId() + "加入会议"), Toast.LENGTH_LONG).show();
+                    }
+                });
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
@@ -98,10 +119,27 @@ public class MeetingPresenter extends MeetingContract.Presenter{
          *
          * @param rcrtcRemoteUser 远端用户
          */
-        @Override
         public void onUserLeft(RCRTCRemoteUser rcrtcRemoteUser) {
             try {
-                getView().onUserLeft(rcrtcRemoteUser);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        RCRTCVideoView rongRTCVideoView = flRemoteUser.findViewWithTag(MeetVideoView.class.getName());
+                        // 远端用户离开时, videoview 在 mFlRemoteUser上，删除挂载在 mFlRemoteUser 上的 videoview
+                        if (null != rongRTCVideoView) {
+                            flRemoteUser.removeAllViews();
+                            rongRTCVideoView = flFullscreen.findViewWithTag(MeetVideoView.class.getName());
+                            // 远端用户离开时，如果本地预览正处于全屏状态自动退出全屏
+                            if (rongRTCVideoView != null) {
+                                flFullscreen.removeAllViews();
+                                flLocalUser.addView(rongRTCVideoView);
+                            }
+                        } else {
+                            // 远端用户离开时 , videoview 在 mFlFull 上，删除挂载在 mFlFull 上的 videoview
+                            flFullscreen.removeAllViews();
+                        }
+                    }
+                });
             } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
@@ -126,6 +164,7 @@ public class MeetingPresenter extends MeetingContract.Presenter{
          */
         @Override
         public void onLeaveRoom(int i) {
+            leaveRoom();
         }
     };
 
@@ -168,7 +207,31 @@ public class MeetingPresenter extends MeetingContract.Presenter{
         RCRTCEngine.getInstance().enableSpeaker(false);
     }
 
+    public static void start(Context context, String roomId, boolean isEncryption) {
+        Intent intent = new Intent(context, MeetingActivity.class);
+        intent.putExtra(KEY_ROOM_NUMBER, roomId);
+        intent.putExtra(KEY_IS_ENCRYPTION, isEncryption);
+        context.startActivity(intent);
+    }
+
     @Override
+    protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_meeting);
+
+        flLocalUser = findViewById(R.id.flLocalUser);
+        flRemoteUser = findViewById(R.id.flRemoteUser);
+        flFullscreen = findViewById(R.id.flFullscreen);
+        tvHangUp = findViewById(R.id.tvHangUp);
+        tvHangUp.setOnClickListener(this);
+
+        Intent intent = getIntent();
+        roomId = intent.getStringExtra(KEY_ROOM_NUMBER);
+        isEncryption = intent.getBooleanExtra(KEY_IS_ENCRYPTION, false);
+        config(this, isEncryption);
+        joinRoom(roomId);
+    }
+
     public void joinRoom(String roomId) {
         RCRTCRoomConfig roomConfig = RCRTCRoomConfig.Builder.create()
                 // 根据实际场景，选择音视频直播：LIVE_AUDIO_VIDEO 或音频直播：LIVE_AUDIO
@@ -178,11 +241,25 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onSuccess(final RCRTCRoom rcrtcRoom) {
                 // 远端用户，本地用户相关资源的获取都依赖RtcRoom
-                MeetingPresenter.this.rtcRoom = rcrtcRoom;
+                rtcRoom = rcrtcRoom;
                 // 注册房间回调
                 rcrtcRoom.registerRoomListener(roomEventsListener);
                 try {
-                    getView().onJoinRoomSuccess(rcrtcRoom);
+                    // 加入房间成功，在 UI 线程设置本地用户显示的 View
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            RCRTCVideoView rongRTCVideoView = new MeetVideoView(getApplicationContext()) {
+
+                            };
+                            RCRTCEngine.getInstance().getDefaultVideoStream().setVideoView(rongRTCVideoView);
+                            flLocalUser.addView(rongRTCVideoView);
+                            // 开始推流，本地用户发布
+                            publishDefaultAVStream();
+                            // 主动订阅远端用户发布的资源
+                            subscribeAVStream();
+                        }
+                    });
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -191,7 +268,7 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onFailed(RTCErrorCode rtcErrorCode) {
                 try {
-                    getView().onJoinRoomFailed(rtcErrorCode);
+                    Log.e(TAG, "--> onJoinRoomFailed");
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -202,7 +279,6 @@ public class MeetingPresenter extends MeetingContract.Presenter{
     /**
      * 发布默认流
      */
-    @Override
     public void publishDefaultAVStream() {
         if (rtcRoom == null) {
             return;
@@ -212,7 +288,7 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onSuccess() {
                 try {
-                    getView().onPublishSuccess();
+                    Log.d(TAG, "--> onPublishSuccess");
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -221,7 +297,7 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onFailed(RTCErrorCode rtcErrorCode) {
                 try {
-                    getView().onPublishFailed();
+                    Log.d(TAG, "--> onPublishFailed");
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -233,7 +309,6 @@ public class MeetingPresenter extends MeetingContract.Presenter{
      * 主动订阅远端用户发布的流
      * 视频流需要用户设置用于显示载体的videoview
      */
-    @Override
     public void subscribeAVStream() {
         if (rtcRoom == null || rtcRoom.getRemoteUsers() == null) {
             return;
@@ -260,7 +335,23 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onSuccess() {
                 try {
-                    getView().onSubscribeSuccess(inputStreams);
+                    // 订阅远端用户发布资源成功，设置显示的 view，在 UI 线程中执行
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            RCRTCVideoView videoView = new MeetVideoView(getApplicationContext()) {
+
+                            };
+                            for (RCRTCInputStream inputStream : inputStreams) {
+                                if (inputStream.getMediaType() == RCRTCMediaType.VIDEO) {
+                                    ((RCRTCVideoInputStream) inputStream).setVideoView(videoView);
+                                    // 将远端视图添加至布局
+                                    MeetingActivity.this.flRemoteUser.addView(videoView);
+                                    break;
+                                }
+                            }
+                        }
+                    });
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -269,7 +360,7 @@ public class MeetingPresenter extends MeetingContract.Presenter{
             @Override
             public void onFailed(RTCErrorCode errorCode) {
                 try {
-                    getView().onSubscribeFailed();
+                    Log.e(TAG,"--> onSubscribeFailed");
                 } catch (IllegalStateException e) {
                     e.printStackTrace();
                 }
@@ -278,6 +369,15 @@ public class MeetingPresenter extends MeetingContract.Presenter{
     }
 
     @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        leaveRoom();
+        flFullscreen.removeAllViews();
+        flLocalUser.removeAllViews();
+        flRemoteUser.removeAllViews();
+        RCRTCEngine.getInstance().unInit();
+    }
+
     public void leaveRoom() {
         RCRTCEngine.getInstance().leaveRoom(new IRCRTCResultCallback() {
             @Override
@@ -290,5 +390,31 @@ public class MeetingPresenter extends MeetingContract.Presenter{
                 Log.d(TAG, "--> leaveRoom - onSuccess");
             }
         });
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.tvHangUp:
+                finish();
+                break;
+        }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
+    }
+
+    /**
+     * 继承RCRTCVideoView,可以重写RCRTCVideoView方法定制特殊需求，
+     * 例如本例中重写onTouchEvent实现点击全屏
+     */
+    class MeetVideoView extends RCRTCVideoView {
+        public MeetVideoView(Context context) {
+            super(context);
+            this.setTag(MeetVideoView.class.getName());
+        }
     }
 }

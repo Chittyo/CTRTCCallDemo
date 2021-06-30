@@ -1,4 +1,4 @@
-package com.example.myapplication.meeting;
+package com.example.myapplication.activity;
 
 import android.content.Context;
 import android.content.Intent;
@@ -45,5 +45,11 @@ public class MeetingPrepareActivity extends AppCompatActivity  implements View.O
                 MeetingActivity.start(MeetingPrepareActivity.this, roomId, false);
                 break;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 }

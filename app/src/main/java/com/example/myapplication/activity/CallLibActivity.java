@@ -19,7 +19,6 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.Group;
 
 import com.example.myapplication.R;
-import com.example.myapplication.base.AppManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -267,14 +266,12 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         initView();
         changeStatus();
         registerCallListener();
-        AppManager.getAppManager().addActivity(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unRegisterCallListener();
-        AppManager.getAppManager().removeActivity(this);
     }
 
     private void registerCallListener() {
@@ -405,6 +402,12 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
             String extra = "";
             RongCallClient.getInstance().startCall(conversationType, targetId, userIds, null, mediaType, extra);
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     enum CallStatus {

@@ -37,7 +37,7 @@ public class App extends Application {
         //音视频通话 CallKit
         RongIM.init(this, APP_KEY);
 
-        //音视频会议 RTCLib
-        RongIMClient.init(this, APP_KEY, false);
+        //音视频会议 RTCLib ( CallKit 中已经包含 RTCLib 中的内容，所以不用重复注册)
+//        RongIMClient.init(this, APP_KEY, false);
     }
 }

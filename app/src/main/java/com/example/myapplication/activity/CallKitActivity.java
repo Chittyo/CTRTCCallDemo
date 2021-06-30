@@ -11,7 +11,6 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.myapplication.R;
-import com.example.myapplication.base.AppManager;
 
 import java.util.ArrayList;
 
@@ -68,13 +67,17 @@ public class CallKitActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
-        AppManager.getAppManager().addActivity(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        AppManager.getAppManager().removeActivity(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        finish();
     }
 
     @Override
