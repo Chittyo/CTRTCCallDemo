@@ -24,12 +24,13 @@ import com.example.myapplication.common.UiUtils;
 
 import java.util.ArrayList;
 
+import io.rong.calllib.RongCallClient;
 import io.rong.imkit.RongIM;
 import io.rong.imlib.RongIMClient;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private static final String TAG = MainActivity.class.getName();
-    private Button btnConnectIMServer, btnRTCConnectIMServer, btnConnectIMServerCallLib;
+    private Button btnConnectIMServer, btnRTCConnectIMServer, btnConnectIMServerCallLib, btnTest;
     private RadioGroup rgUsers;
     private EditText etRoomId;
     private String token001 = "Enzbxdr7hdO6WSr+DZFARkaUNlc6QSw8FXTjaWyaqiE=@poxt.cn.rongnav.com;poxt.cn.rongcfg.com";
@@ -49,10 +50,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         rgUsers = findViewById(R.id.rgUsers);
         etRoomId = findViewById(R.id.etRoomId);
         btnConnectIMServerCallLib = findViewById(R.id.btnCallLibConnectIMServer);
+        btnTest = findViewById(R.id.btnTest);
 
         btnConnectIMServer.setOnClickListener(this);
         btnRTCConnectIMServer.setOnClickListener(this);
         btnConnectIMServerCallLib.setOnClickListener(this);
+        btnTest.setOnClickListener(this);
 
         rgUsers.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
             @Override
@@ -273,20 +276,27 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.btnCallKitConnectIMServer://音视频通话(CallKit)
                 callType = CallType.CALLKIT;
                 if (checkPermission()) {
-                    getTokenFromAppServer();
+//                    getTokenFromAppServer();
+                    callKitConnectIMServer(token);
                 }
                 break;
             case R.id.btnRTCConnectIMServer://音视频会议
                 callType = CallType.RTCLIB;
                 if (checkPermission()) {
-                    getTokenFromAppServer();
+//                    getTokenFromAppServer();
+                    rtcConnectIMServer(token);
                 }
                 break;
             case R.id.btnCallLibConnectIMServer://音视频通话(CallLib)
                 callType = CallType.CALLLIB;
                 if (checkPermission()) {
-                    getTokenFromAppServer();
+//                    getTokenFromAppServer();
+                    callLibConnectIMServer(token);
                 }
+                break;
+            case R.id.btnTest:
+                //测试
+                TestActivity.start(MainActivity.this);
                 break;
         }
     }

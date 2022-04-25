@@ -24,6 +24,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import cn.rongcloud.rtc.api.RCRTCEngine;
+import cn.rongcloud.rtc.api.stream.RCRTCVideoStreamConfig;
+import cn.rongcloud.rtc.base.RCRTCParamsType;
 import io.rong.calllib.IRongCallListener;
 import io.rong.calllib.IRongReceivedCallListener;
 import io.rong.calllib.RongCallClient;
@@ -35,7 +38,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
 
     private static final String TAG = CallLibActivity.class.getName();
 
-    private FrameLayout flLocal, flRemote;
+    private FrameLayout flLocal, flRemote, flRemote2;
     private EditText etTargetUserId, etTargetUserId2, etTargetGroupId;
     private Button btnCall, btnAccept, btnHangUp;
     private TextView tvStatus;
@@ -77,13 +80,26 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
 
         private void addLocalView(SurfaceView view) {
             flLocal.removeAllViews();
-            flLocal.addView(view);
+            if (view != null){
+                flLocal.addView(view);
+            }
         }
 
         private void addRemoteView(SurfaceView view) {
             flRemote.removeAllViews();
-            flRemote.addView(view);
+            if (view != null){
+                flRemote.addView(view);
+            }
         }
+
+        //todo 多人
+//        private void addRemoteViewMore(SurfaceView remoteVideo) {
+//            FrameLayout flRemoteMore = new FrameLayout(getApplicationContext());
+//            FrameLayout.LayoutParams layoutparams = new FrameLayout.LayoutParams(60,80);
+//            layoutparams.setMargins(5,5,5,5);
+//            flRemoteMore.setLayoutParams(layoutparams);
+//            flRemoteMore.addView(remoteVideo);
+//        }
 
         private void clearViews() {
             flLocal.removeAllViews();
@@ -145,6 +161,11 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
 
         }
 
+        @Override
+        public void onRemoteUserAccept(String userId, RongCallCommon.CallMediaType mediaType) {
+
+        }
+
         /**
          * 被叫端加入通话。
          * 主叫端拨出电话，被叫端收到请求后，加入通话，回调 onRemoteUserJoined。
@@ -167,6 +188,8 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
         public void onRemoteUserJoined(String userId, RongCallCommon.CallMediaType mediaType, int userType, SurfaceView remoteVideo) {
             Log.d(TAG, "--> onRemoteUserRinging uid = " + userId);
             addRemoteView(remoteVideo);
+            //todo 多人的时候，需要动态写 FrameLayout
+//            addRemoteViewMore(remoteVideo);
         }
 
         /**
@@ -289,6 +312,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
     private void initView() {
         flLocal = findViewById(R.id.flLocal);
         flRemote = findViewById(R.id.flRemote);
+        flRemote2 = findViewById(R.id.flRemote2);
 
         etTargetUserId = findViewById(R.id.etTargetUserId);
         etTargetUserId2 = findViewById(R.id.etTargetUserId2);
@@ -320,6 +344,8 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
                 }
             }
         });
+
+        RongCallClient.getInstance().startCapture();
     }
 
     private void changeStatus() {
@@ -350,8 +376,16 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
     public void onClick(View v) {
         int id = v.getId();
         if (id == R.id.btnCall) {
+            /*
+                改变摄像头角度 setCameraFrameOrientation(cameraOrientation, frameOrientation);
+                @param cameraOrientation 设置相机采集角度：默认为 0 则使用 SDK 中获取的摄像头 id 计算出的采集角度，当开启是手机前置摄像头时，设置该参数会顺时针旋转图像。值必须设置为：0、90、180、270
+                @param frameOrientation 编码使用到的角度：默认：-1，设置为 -1 时将跟随系统角度，当开启是手机前置摄像头时，设置该参数会逆时针旋转图像。值必须设置为：0、90、180、270
+             */
+            RongCallClient.getInstance().setCameraFrameOrientation(90, 90);
             call();
         } else if (id == R.id.btnAccept) {
+            //改变摄像头角度 setCameraFrameOrientation();
+            RongCallClient.getInstance().setCameraFrameOrientation(180, 180);
             acceptCall();
         } else if (id == R.id.btnHangUp) {
             hangUpCall();
@@ -388,6 +422,15 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
             userIds.add(targetUserId2);
             RongCallCommon.CallMediaType mediaType = RongCallCommon.CallMediaType.VIDEO;
             String extra = "";
+
+//            //分辨率、帧率、码率 设置
+//            RCRTCVideoStreamConfig.Builder builder = RCRTCVideoStreamConfig.Builder.create();
+//            builder.setVideoResolution(RCRTCParamsType.RCRTCVideoResolution.RESOLUTION_480_640);//分辨率
+//            builder.setMaxRate(900);//最大码率
+//            builder.setMinRate(200);//最小码率
+//            builder.setVideoFps(RCRTCParamsType.RCRTCVideoFps.Fps_15);//帧率
+//            RongCallClient.getInstance().setVideoConfig(builder);
+
             RongCallClient.getInstance().startCall(conversationType, targetGroupId, userIds, null, mediaType, extra);
         }else {//单人通话
             String targetId = etTargetUserId.getText().toString().trim();
@@ -397,7 +440,7 @@ public class CallLibActivity extends AppCompatActivity implements View.OnClickLi
             }
             List<String> userIds = new ArrayList<>();
             userIds.add(targetId);
-            RongCallCommon.CallMediaType mediaType = RongCallCommon.CallMediaType.VIDEO;
+            RongCallCommon.CallMediaType mediaType = RongCallCommon.CallMediaType.AUDIO;
             String extra = "";
             RongCallClient.getInstance().startCall(conversationType, targetId, userIds, null, mediaType, extra);
         }

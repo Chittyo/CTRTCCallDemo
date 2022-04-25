@@ -34,6 +34,8 @@ import cn.rongcloud.rtc.base.RCRTCParamsType;
 import cn.rongcloud.rtc.base.RCRTCRoomType;
 import cn.rongcloud.rtc.base.RCRTCStreamType;
 import cn.rongcloud.rtc.base.RTCErrorCode;
+import cn.rongcloud.voicebeautifier.RCRTCVoiceBeautifierEngine;
+import cn.rongcloud.voicebeautifier.RCRTCVoiceBeautifierPreset;
 
 /**
  * 音视频会议
@@ -170,7 +172,6 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
      * 配置rtc sdk
      */
     public void config(Context context, boolean isEncryption) {
-
         RCRTCConfig.Builder configBuilder = RCRTCConfig.Builder.create();
         // 是否硬解码
         configBuilder.enableHardwareDecoder(true);
@@ -179,6 +180,8 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
         // 是否使用自定义加密
         configBuilder.enableAudioEncryption(isEncryption);
         configBuilder.enableVideoEncryption(isEncryption);
+        //设置本地视频采集的颜色空间， 默认 true : texture 方式采集，false : yuv 方式采集
+//        configBuilder.enableEncoderTexture(false);
 
         // init 需结合 uninit 使用，否则有些配置无法重新初始化
         RCRTCEngine.getInstance().unInit();
@@ -238,6 +241,20 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
         RCRTCEngine.getInstance().joinRoom(roomId, roomConfig, new IRCRTCResultDataCallback<RCRTCRoom>() {
             @Override
             public void onSuccess(final RCRTCRoom rcrtcRoom) {
+                //美声
+                RCRTCVoiceBeautifierEngine.getInstance().enable(true, new IRCRTCResultCallback() {
+                    @Override
+                    public void onFailed(RTCErrorCode errorCode) {
+                        Log.e(TAG,"--> 变音 onFailed errorCode="+errorCode);
+                    }
+
+                    @Override
+                    public void onSuccess() {
+                        RCRTCVoiceBeautifierEngine.getInstance().setPreset(RCRTCVoiceBeautifierPreset.GIRL);
+
+                    }
+                });
+
                 // 远端用户，本地用户相关资源的获取都依赖RtcRoom
                 rtcRoom = rcrtcRoom;
                 // 注册房间回调
