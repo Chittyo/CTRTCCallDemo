@@ -173,6 +173,8 @@ public class MeetingActivity extends AppCompatActivity implements View.OnClickLi
      */
     public void config(Context context, boolean isEncryption) {
         RCRTCConfig.Builder configBuilder = RCRTCConfig.Builder.create();
+        //是否自动重连
+//        configBuilder.enableAutoReconnect(true);
         // 是否硬解码
         configBuilder.enableHardwareDecoder(true);
         // 是否硬编码
